@@ -1,3 +1,3 @@
 # Bayesian
 
-## simple, the best
+simple, the best
