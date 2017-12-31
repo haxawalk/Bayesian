@@ -1,6 +1,8 @@
 rs <- function(f, nsample, envelope="n", lower.bound=-4, upper.bound=4)
 {
 
+    ## envelop = "n" : normal pdf, "e" : exponential pdf
+    
 if(envelope=="n") {env.exp = function(x){dnorm(x)}; env.ran = function(x){rnorm(x)}}
     else if(envelope=="e") {env.exp = function(x){dexp(x)} ; env.ran = function(x){rexp(x)}} else 
       {stop("Please enter an appropriate option for envelope.")}
@@ -16,7 +18,7 @@ if(envelope=="n") {env.exp = function(x){dnorm(x)}; env.ran = function(x){rnorm(
       check = (exp(f(w)) <= outer.exp(w))
       if(alphaInverse>=1e3)
       {
-        print("There seems no appropriate envelope.")
+        stop("There seems no appropriate envelope.")
         break;
       }
     }
