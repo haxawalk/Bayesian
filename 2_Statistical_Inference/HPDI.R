@@ -1,3 +1,22 @@
+# Define PDFs
+
+PDF = function(x)
+{
+  return(dgamma(x, shape = 5, scale = 1))
+}
+
+
+PDF2 = function(x)
+{
+  ## support : [-2 * pi , pi]
+  norm.const = 11.42478
+  return((sin(x) + 1)/norm.const)
+}
+
+
+
+# HPDI
+
 HPDI = function(fun, credible=.95, delta=.1, epsilon=1e-3, lb=0, ub=20)
 {
   
@@ -32,3 +51,19 @@ HPDI = function(fun, credible=.95, delta=.1, epsilon=1e-3, lb=0, ub=20)
   
   return(intervals_finder(realm))
 }
+
+
+
+# Validation
+
+HPDI(PDF)
+integrate(PDF, 1.2075, 9.4285)
+
+HPDI(PDF2, lb=-2*pi, ub=pi)
+integrate(PDF2, -6.2826, -2.7986)$value + integrate(PDF2, -0.3427, 3.1403)$value
+
+
+# Plot
+
+
+# Matlab Optimization

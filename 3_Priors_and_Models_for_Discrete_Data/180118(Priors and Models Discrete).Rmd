@@ -1,0 +1,137 @@
+---
+title: "Priors and Models for Discrete Data"
+author: "Hyunwoo Gu"
+date: "Jan 18th, 2018"
+output:
+  pdf_document:
+    latex_engine: xelatex
+mainfont: NanumGothic
+header-includes: \usepackage{bbold}
+---
+
+# 6. Priors
+
+## Priors and prior predictive distributions
+
+To find a prior, start with a cumulative distribution.
+
+Why we should not set a point mass as a prior.
+
+$$
+\begin{aligned}
+P( \theta \le c) \ \ & \forall c \in \mathbb{R} \\[15pt]
+
+\text{Say} \ \ P(\theta = \frac{1}{2}) &= 1 \\[10pt]
+f(\theta \mid \mathbf{y}) & \propto f(\mathbf{y} \mid \theta) f(\theta) \\
+& \propto f(\theta) \\
+\end{aligned}
+$$
+
+Binomial case, 10 time of coin flip
+
+$$
+\begin{aligned}
+
+X & = \sum _{i=1}^{10} Y_i \\[15pt]
+
+f(\theta) &= I_{\{0 \le \theta \le 1\}}  \\
+
+f(x) & = \int f(x \mid \theta) f(\theta) d\theta \\
+& = \int _0 ^1 \frac{10!}{x!(10-x)!} \theta ^x (1-\theta)^x d\theta \\
+& = \int _0 ^1 \frac{\Gamma(11)}{\Gamma(x+1)\Gamma(11-x)} \theta ^x (1-\theta)^x d\theta \\
+& = \frac{\Gamma(11)}{\Gamma(12)} \int _0 ^1 \frac{\Gamma(12)}{\Gamma(x+1)\Gamma(11-x)} \theta ^x (1-\theta)^x d\theta \\
+& = \frac{1}{11} \\
+
+\end{aligned}
+$$
+
+
+## Posterior predictive distribution
+
+$$
+\begin{aligned}
+
+f(y_2 \mid y_1) &= \int f(y_2 \mid \theta, y_1) f(\theta \mid y_1) d\theta \\
+&= \int f(y_2 \mid \theta) f(\theta \mid y_1) d\theta \ \ (\because y_2 \perp y_1)\\[15pt]
+
+f(y_2 \mid Y_1 = 1) &= \int _0 ^1 \theta ^ {y_2} (1 - \theta)^{1-y_2} \ \  2 \theta d \theta \ \ (\because \theta  \sim Binomial))\\
+
+\end{aligned}
+$$
+
+
+
+# 7. Bernouli and Binomial Data
+
+## Conjugate Prior
+
+If prior and posterior belong to the same family of distribution, the prior is called **conjugate prior**.
+
+Set for the **convenience of calculation**(i.e. to generate a closed-form expression), rather than for the exact informativeness.
+
+Without conjugate prior, we may get some **intractable integral in the denominator**. (see **MCMC**)
+
+
+Likelihood | Conjugate Prior 
+------------- | ------------- 
+Bernoulli | Beta
+Binomial | Beta
+Geometric | Beta
+Poisson | Gamma
+Categorical | Dirichlet
+Multinomial | Dirichlet
+
+
+$$
+\begin{aligned}
+
+\text{Posterior} & \propto \text{Prior} \times \text{Likelihood} \\[15pt]
+
+P(\theta \mid \mathbf{y}) & \propto \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha)\Gamma(\beta)} \theta ^{(\alpha-1)} (1- \theta) ^{(\beta-1)} I _{\{0 \le \theta \le 1\}} \ \  \theta^{\sum y_i} (1-\theta) ^{n-\sum y_i}\\[10pt]
+
+& \propto \theta ^ {(\alpha + \sum y_i -1)} (1-\theta) ^{(\beta + n - \sum y_i -1)} \\[15pt]
+
+\therefore \ \ & \theta \mid \mathbf{y} \sim Beta(\alpha + \sum y_i, \ \ \beta + n - \sum y_i) \\
+
+\end{aligned}
+$$
+
+Also possible to set a prior to hyperparameters, making the model **hierarchical**.
+
+
+The mean of the posterior distribution is as follows,
+
+which is the weighted average of the **mean of prior** and the **sampling fraction**
+
+
+## Beta Prior
+
+mean : $\frac{\alpha}{\beta}$
+
+effective sample size : $\alpha + \beta$
+
+\pagebreak
+
+
+# 8. Poisson Data
+
+$$
+\begin{aligned}
+
+\text{Posterior} & \propto \text{Prior} \times \text{Likelihood} \\[15pt]
+
+P(\lambda \mid \mathbf{y}) & \propto \frac{\beta ^ \alpha}{\Gamma(\alpha)} \lambda ^{\alpha-1} e^{-\beta \lambda} \frac{e^{- n \lambda} \lambda ^{\sum y_i}}{\prod y_i!} \\[10pt]
+
+& \propto \lambda ^{\sum y_i + \alpha  - 1} e ^{- (n + \beta) \lambda} \\[15pt]
+
+\therefore \ \ & \lambda \mid \mathbf{y} \sim Gamma(\sum y_i + \alpha, n+\beta) \\
+
+\end{aligned}
+$$
+
+
+## Gamma Prior
+
+mean : $\frac{\alpha}{\alpha + \beta}$
+
+effective sample size : $\beta$

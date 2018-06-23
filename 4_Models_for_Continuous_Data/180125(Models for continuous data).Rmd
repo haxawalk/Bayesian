@@ -1,0 +1,756 @@
+---
+title: "Models for Continuous Data"
+author: "Hyunwoo Gu"
+date: "Jan 25th, 2018"
+header-includes:
+   - \usepackage{bbold}
+output:
+  pdf_document:
+    latex_engine: xelatex
+mainfont: NanumGothic
+---
+
+```{r, include=F}
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(gridExtra)
+```
+
+# Exponential Data
+
+**Conjugate prior** for **exponential likelihood** is **gamma distribution**.
+
+> 
+
+**Prior** : $\lambda \sim Gamma(\alpha, \beta)$
+
+**Likelihood** : $X \mid \lambda \sim Exp(\lambda)$
+
+-------------------------------
+**Given** : Nothing
+
+**Set**  : $\alpha$, $\beta$
+
+**Goal** : Distribution of $\lambda \mid X$
+-------------------------------
+
+**Proposition**
+
+$$
+\lambda \mid \mathbf{y} \sim \Gamma(\alpha + n, \beta + \sum y_i)
+$$
+
+**Posterior statistic**
+
+$$
+\begin{aligned}
+&\text{Posterior mean : } \frac{\alpha + n}{\beta + \sum y_i} \\[10pt]
+&\text{Effective sample size : ?} \\[10pt]
+&\text{Posterior variance : } \frac{\alpha + n}{(\beta + \sum y_i)^2}\\
+\end{aligned}
+$$
+
+
+**Proof**
+
+$$
+\begin{aligned}
+f(\lambda \mid \mathbf{y}) &\propto f(\mathbf{y} \mid \lambda) f(\lambda) \\[10pt]
+&\propto \lambda ^n e^{-\lambda \sum y_i} \lambda ^{\alpha -1} e ^{-\beta \lambda} \\[10pt]
+&\propto \lambda ^ {(\alpha + n) - 1} e^{-(\beta + \sum y_i ) \lambda} \\[15pt]
+\therefore \lambda &\mid \mathbf{y} \sim \Gamma(\alpha + n, \beta + \sum y_i) \ \ \blacksquare \\
+\end{aligned}
+$$
+
+\pagebreak
+
+## Example
+
+Let $Y$ be the waiting time of a bus to come with rate parameter $\lambda$.
+
+Let **gamma prior** (i.e. conjugate prior for exponential distribution) be the prior with $mean =\frac{1}{10}$.
+
+Say prior $\lambda \sim Gamma(100, 1000)$. Then
+
+$$
+\begin{aligned}
+&\text{prior mean : } \frac{1}{10} \\
+&\text{prior SD : } \frac{1}{100} \\[10pt]
+&\text{Credible interval(rough) : } [.1 \pm .02] \ \ (\pm \text{two SDs})\\
+\end{aligned}
+$$
+
+> 
+
+Suppose we observed a **waiting time of 12 minutes**(i.e., $y=12$), and we want to **update the posterior** for lambda.
+
+$$
+\begin{aligned}
+\lambda &\mid \mathbf{y} \sim \Gamma(\alpha + n, \beta + \sum y_i) \\[15pt]
+\lambda &\mid y \sim \Gamma(100 + 1, 1000 + 12) \\[10pt]
+&\text{posterior mean : } \frac{101}{1012} \approx .998\\[10pt]
+&\text{posterior SD : } \sqrt{\frac{101}{1012^2}} \approx .010\\[10pt]
+&\text{Credible interval(rough) : } [.998 \pm .020] \ \ (\pm \text{two SDs})\\
+\end{aligned}
+$$
+
+\pagebreak
+
+Suppose we had set the parameters of prior as $\Gamma(1,10)$,$\Gamma(10,100)$,$\Gamma(100,1000)$,$\Gamma(10^3,10^4)$,$\Gamma(10^4,10^5)$
+
+Then, posterior distributions with the change of prior parameters are as follows.
+
+As effective sample size(i.e. $\beta$) becomes higher, the posterior becomes **shaper** and **closer to the prior**.
+
+> 
+
+```{r, include=FALSE}
+normalizer = function(fun, lb=0.09, ub=0.11)
+{
+  norm.const = integrate(fun, lb, ub)$value
+  fun_ = function(theta) {fun(theta)/norm.const}
+  return(fun_)
+}
+```
+
+```{r, echo=F}
+Likelihood = function(lambda){lambda * exp(- lambda * 12)}
+
+p = ggplot(data.frame(x=c(0, 0.4)), aes(x))+ 
+  stat_function(fun=normalizer(Likelihood), colour="blue", size=1) +
+  theme_classic() +
+  labs(x=expression(lambda), y='Scaled Density') +
+  ggtitle("Posteriors by the Change of Priors") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=15))
+
+
+for(i in 1:5)
+{
+  assign(sprintf("scale_%d", i), i)
+}
+
+Prior_1    = function(lambda){dgamma(lambda, 10^(scale_1-1)  , 10^(scale_1)   )}
+Prior_2    = function(lambda){dgamma(lambda, 10^(scale_2-1)  , 10^(scale_2)   )}
+Prior_3    = function(lambda){dgamma(lambda, 10^(scale_3-1)  , 10^(scale_3)   )}
+Prior_4    = function(lambda){dgamma(lambda, 10^(scale_4-1)  , 10^(scale_4)   )}
+Prior_5    = function(lambda){dgamma(lambda, 10^(scale_5-1)  , 10^(scale_5)   )}
+
+Posterior_1= function(lambda){dgamma(lambda, 10^(scale_1-1)+1, 10^(scale_1)+12)}
+Posterior_2= function(lambda){dgamma(lambda, 10^(scale_2-1)+1, 10^(scale_2)+12)}
+Posterior_3= function(lambda){dgamma(lambda, 10^(scale_3-1)+1, 10^(scale_3)+12)}
+Posterior_4= function(lambda){dgamma(lambda, 10^(scale_4-1)+1, 10^(scale_4)+12)}
+Posterior_5= function(lambda){dgamma(lambda, 10^(scale_5-1)+1, 10^(scale_5)+12)}
+
+for(i in 1:5)
+{
+  p = p + 
+    stat_function(fun=normalizer(get(sprintf("Prior_%d",      i))), colour="red",    size=1, alpha=0.2*i) +
+    stat_function(fun=normalizer(get(sprintf("Posterior_%d",  i))), colour="green", size=1, alpha=0.2*i)
+}
+
+print(p)
+```
+
+
+\pagebreak
+
+
+# Normal Data
+
+## 1. Normal Likelihood with Variance Known
+
+**Conjugate prior** for **normal likelihood with variance known** is **normal distribution**.
+
+**Prior** : $\mu \sim N(m_0, {s_o}^2)$
+
+**Likelihood** : $X \mid \mu \sim N(\mu, {\sigma_0} ^2)$
+
+-------------------------------
+**Given** : ${\sigma_0}^2$
+
+**Set**  : $m_0$, ${s_o}^2$
+
+**Goal** : Distribution of $\mu \mid X$
+-------------------------------
+
+**Proposition**
+
+$$
+\mu \mid \mathbf{x} \sim N(\frac{\frac{n \bar{x}}{{\sigma_0}^2}+\frac{m_0}{{s_0}^2}}{\frac{n }{{\sigma_0}^2} + \frac{1}{{s_0}^2}}, \frac{1}{\frac{n }{{\sigma_0}^2} + \frac{1}{{s_0}^2}})
+$$
+
+
+**Posterior statistic**
+$$
+\text{Posterior mean : } 
+\frac{ n }{ n + 
+    \frac{ {{\sigma}_0}^2 }{ {{s}_0}^2 } 
+                } \bar {\mathbf{x}} + 
+\frac{ 
+    \frac{ {{\sigma}_0}^2 }{ {{s}_0}^2 } 
+         }{ n + 
+         \frac{ {{\sigma}_0}^2 }{ {{s}_0}^2 }
+                } m_0 \\
+$$
+
+$$            
+= \frac{ n }{ n + 
+    \frac{ {{\sigma}_0}^2 }{ {{s}_0}^2 } 
+                  } \bar {\mathbf{x}} +
+\frac{
+    \frac{ {{\sigma}_0}^2 }{ {{s}_0}^2 }
+        }{n + \frac{ {{\sigma}_0}^2 }{ {{s}_0}^2 }
+            } m_0
+$$
+
+$$                
+\text{Effective sample size : } 
+\frac{ {{\sigma}_0}^2 }{ {{s}_0}^2 }
+$$
+
+$$
+\text{Posterior variance : }    
+\frac{ 1 }{ 
+    \frac{ 1 }{ {{\sigma}_0}^2 } + 
+    \frac{ 1 }{ {{s}_0}^2 }
+            } = 
+            (\tau_{ \text{prior} } + \tau_{ \text{data} })^{-1}
+$$
+
+**Proof1 : single observation**
+
+
+**Proof2 : multiple observations**
+
+
+\pagebreak
+
+## Example : the prediction of the score distribution
+
+
+```{r, message=F}
+scores = read_csv("ComputeStat.csv")
+```
+
+
+My objective is to estimate the distribution of the mean of the scores of the students in 2017 *Computer Statistics* course.
+
+To reflect changes in knowledge, I conducted the estimation at 3 different time points
+
+That is, **Before 1st Midterm**, **After 1st Midterm**, **After 2nd Midterm**.
+
+The data distribution is **as follows**.
+
+```{r, echo=F}
+p1 = ggplot(data.frame(x=c(0, 100)), aes(x))+   
+  labs(x='scores', y='density') +
+  ggtitle("September=No test") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+  
+p2 = ggplot(NULL, aes(x = scores$First_Mid)) + 
+  stat_density(geom="line", colour="blue", size=1) +
+  coord_cartesian(xlim=c(0,100), ylim=c(0,.03)) +
+  xlab("scores") + ylab("density") +
+  ggtitle("October=1st Midterm") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+
+p3 = ggplot(NULL, aes(x = c(scores$First_Mid, scores$Second_Mid))) + 
+  stat_density(geom="line", colour="blue", size=1) +
+  coord_cartesian(xlim=c(0,100), ylim=c(0,.03)) +
+  xlab("scores") + ylab("density") +
+  ggtitle("November=1st&2nd Mid") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+
+grid.arrange(p1, p2, p3, ncol = 3)
+```
+
+
+\pagebreak
+
+## 1. Frequentist aaproach : t distribution 
+
+Under the **assumption of normality** of data, the following holds.
+
+$$
+\begin{aligned}
+X &\sim N(\mu, \sigma ^2) \\
+T = \frac {\bar{X} -\mu}{s_X / \sqrt{n}} &\sim t(n-1) \\
+&\text{where } 
+\begin{aligned}
+n &\text{ : sample size} \\[5pt]
+s_X &\text{ : } \sqrt{\frac{SS_X}{n-1}}
+\end{aligned}
+\end{aligned}
+$$
+
+Thus the 95% **confidence interval** is as follows.
+
+$$
+\bar{X} \pm c \frac{s_X}{\sqrt{n}} \text{, where } P(-c<t<c) = .95
+$$
+
+
+```{r}
+qt(p =c(.025, .975), df = 87-1); qt(p =c(.025, .975), df = 87*2-1)
+
+mean(scores$First_Mid) - qt(.975, df = 87-1) * sd(scores$First_Mid)/sqrt(87) ## lower bound in October
+mean(scores$First_Mid) + qt(.975, df = 87-1) * sd(scores$First_Mid)/sqrt(87) ## upper bound in October
+
+mean(c(scores$First_Mid, scores$Second_Mid)) - 
+  qt(p =.975, df = 87*2-1) * sd(c(scores$First_Mid, scores$Second_Mid))/sqrt(87*2)  ## lower bound in November
+mean(c(scores$First_Mid, scores$Second_Mid)) + 
+  qt(p =.975, df = 87*2-1) * sd(c(scores$First_Mid, scores$Second_Mid))/sqrt(87*2)  ## upper bound in November
+```
+
+\pagebreak
+
+## 2. Bootstrapping
+
+```{r}
+res2 = sample(scores$First_Mid, 30*1e4, replace=T)
+res2 = apply(matrix(res2, nrow=30), 2, mean)
+
+res3 = sample(c(scores$First_Mid, scores$Second_Mid), 30*1e4, replace=T)
+res3 = apply(matrix(res3, nrow=30), 2, mean)
+
+quantile(res2, c(.025, .975)); quantile(res3, c(.025, .975))
+```
+
+
+```{r, echo=F}
+p1 = ggplot(data.frame(x=c(0, 100)), aes(x))+   
+  labs(x=expression(bar(X)), y='density') +
+  ggtitle("September=No test") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+
+p2 = ggplot(NULL, aes(x = res2)) + 
+  geom_histogram(aes(y = ..count../10000), breaks = seq(0,100, by=1), 
+                 fill = "green", color = "green", alpha=.4) + 
+  stat_density(geom="line", colour="blue", size=1) +
+  xlab(expression(bar(X))) + ylab("density") +
+  ggtitle("October_Bootstrapping") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+
+p3 = ggplot(NULL, aes(x = res3)) + 
+  geom_histogram(aes(y = ..count../10000), breaks = seq(0,100, by=1), 
+                 fill = "green", color = "green", alpha=.4) + 
+  stat_density(geom="line", colour="blue", size=1) +
+  xlab(expression(bar(X))) + ylab("density") +
+  ggtitle("November_Bootstrapping") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+
+grid.arrange(p1, p2, p3, ncol = 3)
+```
+
+\pagebreak
+
+## 3. Bayesian approach with "normal" Likelihood
+
+**Prior**
+
+From the lessons that I've been through, the following **distribution of the parameter** $\mu$ is postulated.
+
+
+
+$$
+\begin{aligned}
+f(\mu \mid x) & \propto exp[-\frac{1}{2 {\sigma_0}^2} (x - \mu)^2] exp[-\frac{1}{2 {s_0}^2} (\mu - m_0)^2] \\[10pt]
+
+&= exp[-\frac{1}{2} [(\frac{1}{{s_0}^2} + \frac{1}{{\sigma_0}^2}) \mu^2 - 2(\frac{x}{{\sigma_0}^2} + \frac{m_0}{{s_0}^2})\mu + (\frac{x^2}{{\sigma_0}^2} + \frac{{m_0}^2}{{s_0}^2})] \\[20pt]
+
+(\text{Let } &(\frac{1}{{s_0}^2} + \frac{1}{{\sigma_0}^2})^{-1} = {s_1}^2 \text{ and } (\frac{x^2}{{\sigma_0}^2} + \frac{{m_0}^2}{{s_0}^2}) {s_1}^2= m_1 )\\[20pt]
+
+&\propto exp[-\frac{1}{2} (\frac{1}{{s_1}^2} \mu^2 - 2 \frac{m_1}{{s_1}^2} \mu)] \\[15pt]
+&\propto exp[-\frac{1}{2 {s_1}^2} (\mu - m_1)^2]\\[15pt]
+
+& \therefore \lambda \mid x \sim N(m_1, {s_1}^2) \ \ \blacksquare  \\
+\end{aligned}
+$$
+
+
+
+```{r, include=F}
+Likelihood2 = function(theta, x=scores$First_Mid, sigma=15)
+{
+  n = length(x)
+  m = length(theta)
+  
+  res = NULL
+  for(i in 1:m)
+  {
+    res[i] = 1
+    for(j in 1:n)
+    {
+      res[i] = prod(res[i], exp( -1/(2*sigma^2) * (x[j] - theta[i])^2))
+    }
+  }
+  return(res)
+}
+
+Prior2 = function(theta){dnorm(theta, mean = 70, sd = 10)}
+
+Posterior2 = function(theta)
+{
+  Prior2(theta) * Likelihood2(theta)
+}
+
+Likelihood3 = function(theta, x=scores$Second_Mid, sigma=15)
+{
+  n = length(x)
+  m = length(theta)
+  
+  res = NULL
+  for(i in 1:m)
+  {
+    res[i] = 1
+    for(j in 1:n)
+    {
+      res[i] = prod(res[i], exp( -1/(2*sigma^2) * (x[j] - theta[i])^2))
+    }
+  }
+  return(res)
+}
+
+Posterior3 = function(theta)
+{
+  Posterior2(theta) * Likelihood3(theta)
+}
+
+normalizer = function(fun, lb=36, ub=120)
+{
+  norm.const = integrate(fun, lb, ub)$value
+  fun_ = function(theta) {fun(theta)/norm.const}
+  return(fun_)
+}
+```
+
+```{r, echo=F}
+p1 = ggplot(data.frame(x=c(0, 100)), aes(x)) + 
+  stat_function(fun=function(x){dnorm(x,70,10)}, colour="red", size=1) +
+  labs(x=expression(mu), y='density') +
+  ggtitle("September=No test") +
+  coord_cartesian(ylim=c(0,.3)) +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+
+p2 = ggplot(data.frame(x=c(0, 100)), aes(x)) + 
+  stat_function(fun=function(x){dnorm(x,70,10)}, colour="red", size=1) +
+  labs(x=expression(mu), y='density') +
+  ggtitle("October=1st Midterm") +
+  coord_cartesian(ylim=c(0,.3)) +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+  
+p3 = ggplot(data.frame(x=c(0, 100)), aes(x)) + 
+  stat_function(fun=normalizer(Posterior2), colour="red", size=1) +
+  labs(x=expression(mu), y='density') +
+  ggtitle("October=1st Midterm") +
+  coord_cartesian(ylim=c(0,.3)) +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+
+grid.arrange(p1, p2, p3, ncol = 3)
+
+```
+
+```{r}
+Prior2 = function(theta){dnorm(theta, mean = 70, sd = 10)}
+```
+
+**Likelihood**
+
+$$
+X \mid \mu \sim N(\mu, 15^2)
+$$
+
+```{r}
+Likelihood2 = function(theta, x=scores$First_Mid, sigma=15)
+{
+  n = length(x)
+  m = length(theta)
+  
+  res = NULL
+  for(i in 1:m)
+  {
+    res[i] = 1
+    for(j in 1:n)
+    {
+      res[i] = prod(res[i], exp( -1/(2*sigma^2) * (x[j] - theta[i])^2))
+    }
+  }
+  return(res)
+}
+```
+
+
+**Posterior**
+
+$$
+\text{Posterior mean : } \frac{ n }{ n + 
+    \frac{ {{\sigma}_0}^2 }{ {{s}_0}^2 } 
+                  } \bar {\mathbf{x}} +
+\frac{
+    \frac{ {{\sigma}_0}^2 }{ {{s}_0}^2 }
+        }{n + \frac{ {{\sigma}_0}^2 }{ {{s}_0}^2 }
+            } m_0
+$$
+
+```{r, echo=F}
+normalizer = function(fun, lb=0, ub=100)
+{
+  norm.const = integrate(fun, lb, ub)$value
+  fun_ = function(theta) {fun(theta)/norm.const}
+  return(fun_)
+}
+
+p1 = ggplot(data.frame(x=c(0, 100)), aes(x)) + 
+  stat_function(fun=function(x){dnorm(x,70,10)}, colour="red", size=1) +
+  labs(x=expression(mu), y='density') +
+  ggtitle("September") +
+  coord_cartesian(ylim=c(0,0.3)) +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+
+p2= ggplot(data.frame(x=c(0, 100)), aes(x)) + 
+  stat_function(fun=normalizer(Prior2),      colour="red  ", size=1) +
+  stat_function(fun=normalizer(Likelihood2), colour="blue   ", size=1) +
+  stat_function(fun=normalizer(Posterior2),  colour="green", size=1) +
+  labs(x=expression(mu), y='Density') +
+  ggtitle("October") +
+  coord_cartesian(ylim=c(0,0.3)) +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+
+p3= ggplot(data.frame(x=c(0, 100)), aes(x)) + 
+  stat_function(fun=normalizer(Posterior2),      colour="red  ", size=1) +
+  stat_function(fun=normalizer(Likelihood3), colour="blue   ", size=1) +
+  stat_function(fun=normalizer(Posterior3),  colour="green", size=1) +
+  labs(x=expression(mu), y='Density') +
+  ggtitle("November") +
+  coord_cartesian(ylim=c(0,0.3)) +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+
+grid.arrange(p1, p2, p3, ncol = 3)
+
+```
+
+\pagebreak
+
+## 4. Bayesian approach with "cheated" Likelihood
+
+
+**Prior**
+
+The same likelihood as above.
+
+$$
+\mu \sim N(70, 10^2)
+$$
+
+```{r, include=F}
+Prior2 = function(theta){dnorm(theta, mean = 70, sd = 10)}
+
+Likelihood2 = function(theta, x=pull(scores, 2), shape=4)
+{
+  n = length(x)
+  m = length(theta)
+  
+  res = NULL
+  for(i in 1:m)
+  {
+    res[i] = 1
+    rate = shape/(theta[i])
+    for(j in 1:n)
+    {
+      res[i] = prod(res[i], (rate^shape) / gamma(shape) * x[j]^(shape-1) * exp(-rate*x[j]))
+    }
+  }
+  
+  return(res)
+}
+
+Posterior2 = function(theta)
+{
+  Prior2(theta) * Likelihood2(theta)
+}
+
+
+Likelihood3 = function(theta, x=scores$Second_Mid[3:87], shape=4)
+{
+  n = length(x)
+  m = length(theta)
+  
+  res = NULL
+  for(i in 1:m)
+  {
+    res[i] = 1
+    rate = shape/(theta[i])
+    for(j in 1:n)
+    {
+      res[i] = prod(res[i], (rate^shape) / gamma(shape) * x[j]^(shape-1) * exp(-rate*x[j]))
+    }
+  }
+  
+  return(res)
+}
+
+Posterior3 = function(theta)
+{
+  Posterior2(theta) * Likelihood3(theta)
+}
+
+normalizer = function(fun, lb=20, ub=30)
+{
+  norm.const = integrate(fun, lb, ub)$value
+  fun_ = function(theta) {fun(theta)/norm.const}
+  return(fun_)
+}
+```
+
+**Likelihood**
+
+This time, the likelihood was 'cheated' from the actual data distribution(**the risk of overfit**).
+
+$$
+X \mid \mu \sim Gamma(4, 4/\mu)
+$$
+
+```{r, echo=F}
+normalizer = function(fun, lb=0, ub=100)
+{
+  norm.const = integrate(fun, lb, ub)$value
+  fun_ = function(theta) {fun(theta)/norm.const}
+  return(fun_)
+}
+
+p1 = ggplot(data.frame(x=c(0, 100)), aes(x)) + 
+  stat_function(fun=function(x){dnorm(x,70,10)}, colour="red", size=1) +
+  labs(x=expression(mu), y='density') +
+  ggtitle("September") +
+  coord_cartesian(ylim=c(0,0.3)) +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+
+p2= ggplot(data.frame(x=c(0, 100)), aes(x)) + 
+  stat_function(fun=normalizer(Prior2),      colour="red  ", size=1) +
+  stat_function(fun=normalizer(Likelihood2), colour="blue   ", size=1) +
+  stat_function(fun=normalizer(Posterior2),  colour="green", size=1) +
+  labs(x=expression(mu), y='Density') +
+  ggtitle("October") +
+  coord_cartesian(ylim=c(0,0.3)) +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+
+p3= ggplot(data.frame(x=c(0, 100)), aes(x)) + 
+  stat_function(fun=normalizer(Posterior2),      colour="red  ", size=1) +
+  stat_function(fun=normalizer(Likelihood3), colour="blue   ", size=1) +
+  stat_function(fun=normalizer(Posterior3),  colour="green", size=1) +
+  labs(x=expression(mu), y='Density') +
+  ggtitle("November") +
+  coord_cartesian(ylim=c(0,0.3)) +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+
+grid.arrange(p1, p2, p3, ncol = 3)
+```
+
+```{r, include=F}
+Likelihood2 = function(theta, x=scores$First_Mid, sigma=15)
+{
+  n = length(x)
+  m = length(theta)
+  
+  res = NULL
+  for(i in 1:m)
+  {
+    res[i] = 1
+    for(j in 1:n)
+    {
+      res[i] = prod(res[i], exp( -1/(2*sigma^2) * (x[j] - theta[i])^2))
+    }
+  }
+  return(res)
+}
+
+Likelihood3 = function(theta, x=pull(scores, 2), shape=4)
+{
+  n = length(x)
+  m = length(theta)
+  
+  res = NULL
+  for(i in 1:m)
+  {
+    res[i] = 1
+    rate = shape/(theta[i])
+    for(j in 1:n)
+    {
+      res[i] = prod(res[i], (rate^shape) / gamma(shape) * x[j]^(shape-1) * exp(-rate*x[j]))
+    }
+  }
+  
+  return(res)
+}
+```
+
+\pagebreak
+
+Comparions between **normal and gamma likelihood**.
+
+```{r, echo=F}
+Posterior2 = function(theta)
+{
+  Prior2(theta) * Likelihood2(theta)
+}
+
+ggplot(NULL, aes(x=x, colour = Distributions)) +
+  stat_function(data = data.frame(x = 0:100, Distributions = factor(1)), fun = normalizer(Likelihood2), size=.8) +
+  stat_function(data = data.frame(x = 0:100, Distributions = factor(2)), fun = normalizer(Likelihood3), size=.8) +
+  scale_colour_manual(values = c("red", "blue"), 
+                      labels = c("Normal", "Gamma")) +
+  labs(x=expression(mu), y="density") +
+  ggtitle("Normal vs. Gamma Likelihood") +
+  theme_classic() +
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size=11))
+```
+
+\pagebreak
+
+## 2. Normal Likelihood with Variance Unknown
+
+***Hierarchical modeling** is needed
+
+**Prior** (marginal) for $\sigma^2$ : $\sigma^2 \sim$ $\Gamma^{-1}(\alpha, \beta)$
+
+**Prior** for $\mu$ given $\sigma^2$  : $\mu \mid \sigma^2 \sim N(m, \frac{\sigma^2}{w})$
+
+**Likelihood** : $X \mid \mu, \sigma^2 \sim N(\mu, \sigma^2)$
+
+-------------------------------
+**Given** : Nothing
+
+**Set**  : $\alpha$, $\beta$, $m$, $w=\frac{\sigma^2}{{\sigma_\mu}^2}$
+
+**Goal** : Distribution of $\mu \mid \sigma^2, X$, $\mu \mid X$
+-------------------------------
+
+
+**Proposition**
+
+$$
+\begin{aligned}
+X_i \mid \mu, \sigma^2 &\overset{iid}{\sim} N(\mu, \sigma^2) \\[15pt]
+\mu \mid \sigma^2 &\sim N(m, \frac{\sigma^2}{w}) \ \  where \ \ w=\frac{\sigma^2}{{\sigma_\mu}^2} \\[15pt]
+\sigma^2 &\sim \Gamma^{-1}(\alpha + \frac{n}{2}, \beta + \frac{1}{2} \sum_i (X_i -\bar{X})^2 + \frac{nw}{2(n+w)}(\bar{X}-m)^2 ) \\[15pt]
+\mu \mid \sigma^2, \mathbf{x} &\sim N(\frac{n \bar{X} + wm}{n + w}, \frac{\sigma^2}{n + w}) \\[15pt]
+\mu \mid \mathbf{x} &\sim t_{noncentral}(mean, variance) \\
+\end{aligned}
+$$

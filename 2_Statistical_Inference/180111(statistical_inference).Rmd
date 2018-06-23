@@ -1,0 +1,182 @@
+---
+title: "Statistical Inference"
+author: "Hyunwoo Gu"
+date: "Jan 11th, 2018"
+header-includes:
+   - \usepackage{bbold}
+output:
+  pdf_document:
+    latex_engine: xelatex
+mainfont: NanumGothic
+---
+
+```{r, include=F}
+library(ggplot2)
+library(tidyr)
+library(purrr)
+```
+
+# Frequentist Inference
+
+## 4.1 Confidence Interval
+
+빈도론적 패러다임에서 데이터는 가설적인 큰 모집단에서 랜덤 샘플링된 것으로 본다. 이 모집단의 파라미터는 하나의 값으로 고정되어 있으며, 이를 추론하는 것이 목표가 된다. 
+
+**신뢰구간**(confidence interval)은 관측된 데이터로부터 계산되는 구간 추정량의 한 종류로, **신뢰수준**(confidence level)은 무한히 독립시행을 하였을 때 각 시행에서의 신뢰구간들이 파라미터를 포함할 비율에 해당한다.
+
+예컨대 파라미터 $p$가 다음과 같이 주어져있고, 이를 추정해야 한다고 하자.  
+
+```{r}
+p = runif(1) ## in the blackbox
+```
+
+100번 반복하는 시행을 해서 신뢰구간을 추정할 수 있다. 이러한 신뢰구간의 추정을 다시 충분한 수(=1000회) 반복한다.
+
+```{r}
+D = data.frame(NULL)
+
+for(i in 1:1e3)
+{
+  sample_mean = mean(rbernoulli(100, p=p))
+  interval_LB = 100*sample_mean - 1.96*sqrt(100*sample_mean*(1-sample_mean))
+  interval_UB = 100*sample_mean + 1.96*sqrt(100*sample_mean*(1-sample_mean))
+  hit = ifelse(100*p >= interval_LB && 100*p < interval_UB, 1, 0)
+  D = rbind(D, c(i,sample_mean,interval_LB,interval_UB, hit))
+}
+
+names(D) = c("trial", "sample.mean", "LB", "UB", "Hit")
+
+head(D)
+```
+
+```{r, echo=FALSE}
+ggplot(D, aes(trial, sample.mean)) + geom_linerange(aes(ymin=LB, ymax=UB), colour='blue') +
+  geom_hline(yintercept=p*100, colour='red') + theme_classic()
+```
+
+## 4.2 Likelihood function and Maximum Likelihood
+
+모집단의 분포가 $f(x \mid \theta), \theta \in \Omega$일 때, 모집단으로부터의 랜덤한 독립표본 $X_1, \cdots X_n$을 이용해 $\theta$를 추정하게 된다. 어떤 $\theta$를 갖는 모집단에서 관측결과를 $\mathbb{x}=(x_1, \cdots, x_n)$으로 두면, 이 $\mathbb{x}$가 생성될 확률을 구할 수 있다.
+
+$$
+pdf_X (\mathbb{x} \mid \theta) = \prod_{i=1}^{n}f(x \mid\theta)
+$$
+
+위의 식은 $\mathbb{x}$에 대한 식이지만, $\mathbb{x}$를 고정시킬 경우 $\theta \in \Omega$의 함수가 된다. 이 함수를 **가능도함수**라고 하며, 이를 최대로 하는 $\hat{\theta}$를 **최대가능도추정량(MLE)**이라고 한다.
+
+$$
+\begin{aligned}
+L(\theta \mid x) &= \prod_{i=1}^{n}f(x_i\mid \theta) \\
+l(\theta) &= ln (L(\theta \mid \mathbb{x} )\\[10pt]
+\hat{\theta}^{\text{MLE}} &= \text{argmax} L(\theta \mid \mathbb{x}) \\
+\end{aligned}
+$$
+
+최대가능도추정량$\hat{\theta}^{\text{MLE}}$은 일대일변환 $g$에 대해 $\xi = g(\theta)$로 두면 $\hat{\xi}^{\text{MLE}} = g(\hat{\theta}^{\text{MLE}})$이다. 또한 최대가능도추정량은 가능도방정식의 **유일한** 근이며, 이를 **일치성**(consistency)이라 한다.
+
+
+## 4.3 Computing MLE, examples
+
+어떤 병원의 사망 환자를 토대로 그 지역의 사망률(mortality rate)을 추정해보자. 어떤 병원의 환자는 랜덤표집된 것이라 할 수 없으므로 문제를 갖기는 한다.
+
+$$
+\begin{aligned}
+l(\theta) &= ln[ \prod \theta ^{y_i} (1-\theta) ^{1-y_i} ] \\
+&= (\sum y_i)ln{\theta} + (\sum(1-y_i)ln(1-\theta)) \\[10pt]
+l'(\theta) &= \frac{1}{\theta}\sum{y_i} - \frac{1}{1-\theta}\sum(1-y_i)\\[10pt]
+\hat{\theta} &= \text{argmax}(l'(\theta)) \\
+&=\frac{1}{n} \sum y_i\\[10pt]
+\text{Approx CI} &= [\hat{\theta} \pm 1.96 \sqrt{\frac{\theta(1-\theta)}{n}}]\\
+\hat{\theta} &\approx N(\theta, \frac{1}{I(\theta)})
+\end{aligned}
+$$
+
+다음으로, 지수분포를 따르는 독립표본 $X_i \sim Exp(\lambda)$를 생각해보자.
+
+$$
+\begin{aligned}
+f(\mathbb{x} \mid \lambda ) &= \prod_{i=1}^{n} \lambda e^{-\lambda x_i} \\
+L(\lambda \mid \mathbb{x}) &= \prod_{i=1}^{n} \lambda e^{-\lambda x_i} \\[10pt]
+l(\lambda) &= n \cdot ln(\lambda) - \lambda \sum_{i=1}^n x_i \\
+l'(\lambda) &= \frac{n}{\lambda} - \sum x_i \\
+\hat{\lambda} &= \text{argmax}(l'(\lambda)) \\
+&=\frac{1}{\bar{X}} \\
+\end{aligned}
+$$
+
+마지막으로, 균등분포를 따르는 독립표본 $X_i \sim U[0, \theta]$를 생각해보자.
+
+$$
+\begin{aligned}
+f(\mathbb{x} \mid \theta) &= \prod _{i=1}^n \frac{1}{\theta} I_{\{0 \le x_i \le \theta\}} \\[10pt]
+L(\theta \mid \mathbb{x}) &= \theta^{-n}I_{\{0 \le \text{min}\mathbb{x} \le \text{max}\mathbb{x} \le \theta\}} \\[10pt]
+L'(\theta) &= -n \theta ^{-(n+1)} I_{\{0 \le \text{min}\mathbb{x} \le \text{max}\mathbb{x} \le \theta\}} \\[10pt]
+\therefore \hat{\theta} ^{\text{MLE}}&=\text{max} (\mathbb{x}) \\
+\end{aligned}
+$$
+
+# Bayesian Inference
+
+파라미터 $\theta$가 특정한 사전분포를 따른다고 가정하자. 그러면 확률밀도함수가 $f(x \mid \theta), \theta \in \Omega$인 모집단에서 표본이 $X_1, \cdots, X_n$으로 주어져 있다고 하자. 그러면 이 표본이 주어진 상태에서 $\theta$의 분포, 즉 $Posterior$의 분포는 다음과 같다.
+
+$$
+\begin{aligned}
+\text{Posterior} & \propto L(\theta \mid X) \times \text{Prior} \\[10pt]
+f(\theta \mid X) & \propto L(\theta \mid X) \times f(\theta) \\
+\end{aligned}
+$$
+
+강의에 나온 예시를 응용해서, 파라미터 $\theta \in \{fair, loaded\}$가 특정한 사전분포($Prior$)를 따를 때, 5번 던지는 시행 중 2번이 앞면이 나왔을 때 $\theta = loaded$일 확률을 구해보자. $Prior$ $P(\theta = loaded)=\alpha$라고 두고, $\alpha$가 변함에 따라 $P(\theta = loaded \mid X=2)$가 어떻게 달라지는지 보자. 다음 그래프로부터, 우리는 **주관적 사전지식의 수준**에 따라 파라미터에 대한 추정이 달라짐을 알 수 있다. 
+
+```{r, echo=FALSE}
+prob = function(alpha)
+{
+  ((.7)^2 * (.3)^3 * alpha)/((.5)^5 * (1-alpha) + (.7)^2 * (.3)^3 * alpha)
+}
+
+ggplot(data.frame(x=c(0, 1)), aes(x)) + 
+  stat_function(fun=prob, colour="blue", size=1) +
+  labs(x='Prior', y='Probability') +
+  theme_classic()
+```
+
+
+## 5.3 Continuous version of Bayes theorem
+
+$\theta$가 연속확률변수인 경우의 베이즈정리는 다음과 같다.
+
+$$
+\begin{aligned}
+f(\theta \mid \mathbb{x}) &= \frac{f(\mathbb{x} \mid \theta) f(\theta)}{f(\mathbb{x})} \\
+&= \frac{f(\mathbb{x} \mid \theta) f(\theta)}{\int f(\mathbb{x} \mid \theta) f(\theta) d\theta} \\[10pt]
+&= \frac{\text{likelihood} \times \text{prior}}{\text{normalizing constant}} \\[10pt]
+& \propto \text{likelihood} \times \text{prior} 
+\end{aligned}
+$$
+
+
+
+## 5.4 Posterior intervals
+
+$\theta$의 사전분포를 $U[0,1]$로 두고, 동전을 던져 $X=1$인 결과를 얻었다고 하자.
+
+$$
+\begin{aligned}
+\theta & \sim U[0,1] \\
+f(\theta \mid \mathbb{x}=1) &= \frac{\theta ^1 (1-\theta) ^ 0 I _ {\{0 \le \theta \le 1\}}}{\int \theta ^1 (1-\theta) ^ 0 I _ {\{0 \le \theta \le 1\}}d\theta} \\
+&= 2\theta I_{\{0 \le \theta \le 1\}} \\
+\end{aligned}
+$$
+
+$\theta$의 사전분포에서 구간 추정량을 구해보자. $P(.025 < \theta < .975)=.95$이다.
+
+한편, $P(.025 < \theta < .975)= \int _{.025} ^{.975} 2 \theta d \theta = .95$이다.
+
+사후분포의 구간, 즉 신용구간(credible interval)에는 Equal tailed , HPD 등이 있다.
+
+**Equal tailed** : 구간의 좌측에 속할 확률과 우측에 속할 확률이 같다.
+
+**Highest Posterior Density** 
+
+
+**사후분포**는 우리의 사전 신념과 데이터를 결합한 결과로서 불확실성에 대한 이해를 의미한다. 베이지안은 불확실성을 확률로 나타낼 수 있다.
