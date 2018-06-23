@@ -1,0 +1,721 @@
+---
+title: "Review of Distributions"
+author: "Hyunwoo Gu"
+date: "Jan 7th, 2018"
+output:
+  pdf_document:
+    latex_engine: xelatex
+mainfont: NanumGothic
+---
+
+```{r, include=F}
+library(ggplot2)
+library(tidyr)
+```
+
+
+# Basic Concepts for Probability Distribution
+
+## "Sample Space"
+
+통계는 불확실성을 다루는 학문이지만, 적어도 가능한 결과들은 모두 알고 있다는 가정에서 출발한다. 즉, 한 **시행**(experiment)에서 가능한 모든 결과들의 집합을 정의하고 비로소 시작되며, 모든 정의가 그렇듯 여기서 자의성이 개입할 수 있다. 예컨대 동전을 던질 때 우연히도 옆면으로 서는 경우는 보통 이 집합에 포함시키지 않는다. 가능한 결과의 집합을 $\{Head, Tail\}$로 좁혀서 생각하는 것이다.
+
+
+**Sample Space($\Omega$)** : 한 시행에서 가능한 결과(outcome)들의 집합.
+고전적 확률을 다루는 등확률모형(equal probability model)에서는 표본공간의 원소, 즉 각 결과가 동등하게 가능하다(equally likely)고 본다. 따라서 표본공간의 각 원소 $\omega \in \Omega$에 대하여 다음이 성립된다.
+
+$$
+P(\{\omega\}) = \frac{1}{\mid \Omega\mid}
+$$
+
+예컨대 빨간 공 세 개, 파란 공 두 개가 들어있는 박스에서 공 하나를 꺼내는 시행(experiment)을 생각하자. 표본공간을 $\{Red, Blue\}$로 잡으면 될까? No, 각 경우가 $\frac{3}{5}$, $\frac{2}{5}$의 확률로 뽑히므로, 동등하지 않다. 대신에, 각 공을 구분 가능하다고 “가정하여” 표본공간을 $\{Red1, Red2, Red3, Blue1, Blue2\}$로 생각할 수 있다. 
+
+표본공간이 무한한 점들인 경우에도 표본공간을 정의할 수 있다. 예컨대 특정 도형 부분의 넓이로 확률을 정의할 수도 있다. 무한한 표본공간에서 확률 $P(\cdot) : \Omega \rightarrow [0,1]$은 **Kolmogorov의 세 가지 공리**를 만족시키며, 연속성(**continuity**)을 가진다. 표본공간이 유한이든 무한이든, $P(\Omega) = 1$이다. 
+
+
+## "Random Variable"
+
+무선변수는 표본공간의 원소에 실수를 대응시키는 **함수**다. 즉 무선변수 $X$는 $X: \Omega \rightarrow \mathbb{R}$인 함수다.
+
+
+## "Probability Density Function"
+
+무선변수의 분포를 나타내주는 함수로, 누적분포함수(CDF)의 미분형태이다. 이산확률변수는 확률질량함수(PMF)로 불리지만, 강의에 따르면 PDF로 볼 수도 있다. 연속확률변수에서 y축은 확률밀도(probability density)이며, **확률이 아니다!**
+
+
+*Question* : $X_1$, $X_2$가 동일한 PDF를 갖는다고 하자. 그러면 $X_1 = X_2$일까?
+
+
+## "Indicator Function"
+
+지표함수는 해당 Argument가 참이면 1, 거짓이면 0으로 대응시키는 함수다. 지표함수는 함수의 지지집합(**support**), 즉 함수값이 0이 아닌 정의역의 부분집합을 효과적으로 표현할 수 있다. 연산에서 항상 1순위로 계산된다. 
+
+
+## "Expected Value(Mean)"
+
+기댓값(Expected value or Mean)은 X가 취할 수 있는 값의 weighted average이며, weight는 해당 값의 확률로 주어진다. 정의는 다음과 같다.
+
+$$
+\begin{aligned}
+\mathbb{E}(X) = 
+\begin{cases} \sum_x x \cdot f(x) & \text{if X is discrete}  \\[10pt]
+\int_{-\infty}^{\infty}x \cdot f(x) dx & \text{if X is continuous} \end{cases}
+\end{aligned}
+$$
+
+수렴하는 절대합이나 이상적분의 특성상, 다음의 성질이 성립한다.
+
+$$
+\begin{aligned}
+& \mathbb{E}(aX + b) = a\mathbb{E}(X) + b \\
+& \mathbb{E}[c_1g_1(X) + c_2g_2(Y)] = c_1\mathbb{E}(g_1(X)) + c_2 \mathbb{E}(g_2(Y))
+\end{aligned}
+$$
+
+*Question* : 위 성질들 중 두 번째 성질은 $X$와 $Y$가 독립일 때만 성립할까?
+
+
+다음으로, 첫 번째 특성은 일반적으로 성립하지 않는다(Non-multiplicativity). 두 번째 특성은 독립인 두 무선변수에서 성립한다.
+
+$$
+\begin{aligned}
+& \mathbb{E}(g(X)) \ne g(\mathbb{E}(X)) \\[7pt]
+& \mathbb{E}(g_1(X)g_2(Y)) = \mathbb{E}(g_1(X))\mathbb{E}(g_2(Y)) \text{  if X} \perp {Y}
+\end{aligned}
+$$
+
+
+## "Variance"
+
+분산은 무선변수의 값들이 얼마나 산포되어 있는지를 보여주는 값이며, **편차 제곱의 기댓값**이다. 수식으로 표현하면 다음과 같다.
+
+$$
+\begin{aligned}
+Var(X) &= \mathbb{E}[(X-\mu)^2]\\[10pt]
+&= \begin{cases} \sum_x (x-\mu)^2 \cdot f(x) & \text{if X is discrete}  \\[10pt]
+\int_{-\infty}^{\infty}(x-\mu)^2 \cdot f(x) dx & \text{if X is continuous} \end{cases}
+\end{aligned}
+$$
+
+
+
+$$
+\begin{aligned}
+Var(X) &= \mathbb{E}[(X-\mu)^2]\\[7pt]
+&= \mathbb{E}(X^2 -2\mu X + \mu ^2)\\[7pt]
+&= \mathbb{E}(X^2) -2\mu\mathbb{E}(X) + \mu^2\\[7pt]
+&= \mathbb{E}(X^2) - \mathbb{E}(X)^2
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+&Var(X+Y) = Var(X) + Var(Y) + Cov(X,Y) + Cov(Y, X)\\[10pt]
+&Var(c_1 X + c_2Y + c_3) = c_1Var(X) + c_2Var(Y) \text{  (if X} \perp {Y)} \\
+\end{aligned}
+$$
+
+*Question* : 무선변수 $X$와 $Y$에 대해, $Var(3X - 2Y + 3)$의 값은?
+
+*Question* : 무선변수 $X$의 분산이 0이라고 하자. $X$의 특성을 말해보자.
+
+\pagebreak
+
+# Basic Probability Distributions Ⅰ : Discrete case
+
+## Bernoulli Distribution
+
+$p$의 확률로 1을, $q=(1-p)$의 확률로 0을 갖는 무선변수가 따르는 분포를 의미한다. p를 성공확률, q를 실패확률이라 말한다. 
+
+$$
+X \sim B(p) \text{ (} p \text{: the probability of success)}
+$$
+
+예컨대, 1등(jackpot)만을 노리고 로또 하나를 사는 시행에서 무선변수 $X$를 다음과 같이 정의하면, X는 베르누이분포를 따른다.
+
+$$
+\begin{aligned}
+X &:   
+\begin{cases} X(\text{jackpot}) &\rightarrow 1\\[7pt]
+X(\text{otherwise})  & \rightarrow 0\end{cases} \\[14pt]
+\text{Then,   } X & \sim B(1/8145060)
+\end{aligned}
+$$
+
+확률밀도함수는 다음과 같다.
+
+$$
+\begin{aligned}
+f_X (x) &=  
+\begin{cases} p & \text{if } x=1 \\[7pt]
+1-p & \text {if }x=0 \end{cases} \\[14pt]
+&= pI_{\{x=1\}}(x) + (1-p)I_{\{x=0\}}(x)
+\end{aligned}
+$$
+
+
+평균과 분산을 구하면 다음과 같다.
+
+$$
+\begin{aligned}
+\mathbb{E}(X) &= \sum_{x \in \{0,1\}} x f(x) \\
+&= 0 \cdot f(0) + 1 \cdot f(1) \\
+&= p\\[6pt]
+Var(X) &= \sum_{x \in \{0,1\}} (x-\mu)^2 f(x) \\
+&= p^2 \cdot f(0) + (1-p)^2 \cdot f(1) \\
+&= p^2 \cdot (1-p) + (1-p)^2 \cdot p \\
+&= p(1-p)
+\end{aligned}
+$$
+
+
+## Categorical Distribution
+
+베르누이분포의 일반화된 형태로, $k$개의 가능한 결과 중 하나를 갖는 무선변수가 따르는 분포를 의미한다. 
+
+$$
+\begin{aligned}
+X \sim Cat(\mathbf{p}) \text{ (} \mathbf{p}=&(p_1, p_2, \cdots, p_k) \text{)} \\
+& where \ \  \sum_{i=1}^{k} p_i = 1
+\end{aligned}
+$$
+
+
+## Binomial Distribution
+
+베르누이 시행을 n번 독립적으로 반복할 때의 분포를 의미하며, 파라미터로 총 시행횟수 n과 성공확률 p를 받는다.
+
+성공확률이 $p$인 Bernoulli distribution 따르는 독립적인 무선변수 X n개의 합은 $\text{Bin}(n,p)$를 따른다.
+
+$$
+X \sim \text{Bin}(n, p) \\
+$$
+
+$$
+\begin{aligned}
+&X \sim \text{Bin}(1,p) \\ 
+&\text{ then } X \sim B(p) \\
+&\text{if independent } X_1, \cdots, X_k \sim B(p), \sum _{i=1}^{k} X_i \sim \text{Bin}(k,p) \\
+\end{aligned}
+$$
+
+확률밀도함수는 다음과 같다.
+
+$$
+\begin{aligned}
+f_X (x) &=  {n\choose x}p^x(1-p)^{n-x}\\[14pt]
+\end{aligned}
+$$
+
+
+평균과 분산을 구하면 다음과 같다.
+
+$$
+\begin{aligned}
+\mathbb{E}(X) &= \sum_{x = 0}^{n} x f(x) \\
+&= \sum_{x = 0}^{n} x{n\choose x}p^x(1-p)^{n-x} \\
+&= np \sum_{x = 1}^{n} {{n-1}\choose {x-1}}p^{x-1}(1-p)^{n-x} \\
+&= np (p + (1-p))^{n-1}\\
+&= np \\[10pt]
+Var(X) &= Var(\sum_{i=1}^{n} X_i) \text{ (where } X_i \sim B(p)) \\
+&= n Var(X_i)\\
+&= np(1-p)
+\end{aligned}
+$$
+
+
+다음은 파라미터에 따른 확률밀도함수들이다. $n$이 커질수록 분포의 모양이 $N(np, np(1-p))$에 근사하는 것을 관찰할 수 있다.
+
+```{r, echo=FALSE}
+
+binom10 = function(x){dbinom(x, size=10, prob=.2)}
+binom30 = function(x){dbinom(x, size=30, prob=.2)}
+binom50 = function(x){dbinom(x, size=50, prob=.2)}
+binom99 = function(x){dbinom(x, size=99, prob=.2)}
+
+x = 1:30
+X = data.frame(x=x,
+               "size:10, prob:0.2"=binom10(x),
+               "size:30, prob:0.2"=binom30(x),
+               "size:50, prob:0.2"=binom50(x),
+               "size:99, prob:0.2"=binom99(x))
+
+X = gather(X, parameters, values, 2:5)
+
+ggplot(X, aes(x = x, y = values, color = parameters, group = parameters)) + 
+  geom_point() + geom_line() + theme_classic()
+```
+
+
+## Geometric Distribution
+
+기하분포는 첫 성공 결과를 얻기 위해 필요한 시행의 수를 나타내는 분포이다. 
+
+
+$$
+\begin{aligned}
+X & \sim \text{Geo}(p)
+\end{aligned}
+$$
+
+
+확률밀도함수는 다음과 같다.
+
+$$
+\begin{aligned}
+f_X (x) &=  (1-p)^{x-1}p
+\end{aligned}
+$$
+
+
+평균과 분산을 구하면 다음과 같다. 
+
+$$
+\begin{aligned}
+\mathbb{E}(X) &= \sum_{x = 0}^{\infty} x f(x) \\
+&= p \sum_{x = 0}^{\infty} x (1-p)^{x-1}  \\
+&= p \frac{d}{dp}(-\sum_{x=0}^{\infty}(1-p)^x) \\
+&= p \frac{d}{dp}(-\frac{1}{p})\\
+&= \frac{1}{p} \\[10pt]
+Var(X) &= \frac{1-p}{p^2}
+\end{aligned}
+$$
+
+다음은 파라미터에 따른 PDF의 분포이다. 
+
+
+```{r, echo=FALSE}
+geo2 = function(x){dgeom(x, prob=.2)}
+geo3 = function(x){dgeom(x, prob=.3)}
+geo5 = function(x){dgeom(x, prob=.5)}
+geo9 = function(x){dgeom(x, prob=.9)}
+
+x = 1:10
+X = data.frame(x=x,
+               "prob:0.2"=geo2(x),
+               "prob:0.3"=geo3(x),
+               "prob:0.5"=geo5(x),
+               "prob:0.9"=geo9(x))
+
+X = gather(X, parameters, values, 2:5)
+
+ggplot(X, aes(x = x, y = values, color = parameters, group = parameters)) + 
+  geom_point() + geom_line() + labs(y="probability") + theme_classic()
+```
+
+
+## Multinomial Distribution
+
+다항분포는 Categorical Distribution의 일반화된 형태이다. PDF는 다음과 같다.
+
+
+$$
+\begin{aligned}
+X & \sim  \text{Multi}(n, (p_1, \cdots,p_k)) \\
+f_X(x_1, \cdots , x_k \mid p_1, \cdots, p_k) &=  \frac{n!}{x_1!\cdots x_k!} p_1^{x_1}\dots p_k^{x_k} \\
+&where \ \  \sum_{i=1}^{k} x_i = n, \ \ \sum_{j=1}^{k} p_j = 1
+\end{aligned}
+$$
+
+
+## Poisson Distribution
+
+포아송 분포는 단위 시간에 사건이 일어나는 횟수를 모델링하는 분포이다. 파라미터인 $\lambda$는 집계되는 사건의 속도(rate)를 가리킨다.
+
+$$
+X \sim \text{Pois}(\lambda)
+$$
+
+
+확률밀도함수는 다음과 같다.
+
+$$
+\begin{aligned}
+f_X(x) & = \frac{\lambda ^x exp(- \lambda)}{x!}
+\end{aligned}
+$$
+
+평균과 분산을 구하면 다음과 같다. 
+
+$$
+\begin{aligned}
+\mathbb{E}(X) &= \sum_{x = 0}^{\infty} x f(x) \\
+&= \sum_{x = 0}^{\infty} x \frac{\lambda ^x exp(- \lambda)}{x!}  \\
+&= \sum_{x = 1}^{\infty} \frac{\lambda ^x exp(- \lambda)}{(x-1)!}  \\
+&= \lambda exp(- \lambda)\sum_{x = 1}^{\infty} \frac{\lambda ^{x-1} }{(x-1)!}\\
+&= \lambda exp(- \lambda) exp(\lambda)\\
+&= \lambda \\[10pt]
+Var(X) &= \lambda
+\end{aligned}
+$$
+
+다음은 파라미터에 따른 PDF의 모양 차이이다. $\lambda$ 값이 커질수록 정규분포에 근사하는 것을 볼 수 있다.
+
+```{r, echo=FALSE}
+pois1 = function(x){dpois(x, lambda=1)}
+pois4 = function(x){dpois(x, lambda=4)}
+pois7 = function(x){dpois(x, lambda=7)}
+pois9 = function(x){dpois(x, lambda=9)}
+
+x = 1:20
+X = data.frame(x=x,
+               "lambda:1"=pois1(x),
+               "lambda:4"=pois4(x),
+               "lambda:7"=pois7(x),
+               "lambda:9"=pois9(x))
+
+X = gather(X, parameters, values, 2:5)
+
+ggplot(X, aes(x = x, y = values, color = parameters, group = parameters)) + 
+  geom_point() + geom_line() + labs(y="probability") + theme_classic()
+```
+
+유쾌한 예시는 아닌 것 같지만, 고학번 학생이 단위시간당 **‘갠톡’**을 얼마나 받을 수 있는지 모델링을 해보자. 하루를 단위시간으로 잡을 때, 하루에 평균적으로 서로 다른 2명으로부터 ‘갠톡’을 받는다고 해보자. 편의를 위해 발신자 1명당 하나의 메시지만 온다고 가정한다. 이 경우 속도 파라미터 $\lambda = 2$이고, 받을 수 있는 메시지 수의 **기댓값**도 $\mathbb{E}(X)=\lambda=2$이다. 
+
+
+\pagebreak
+
+# Basic Probability Distributions Ⅱ : Continuous case
+
+
+## Uniform Distribution
+
+$$
+X \sim U[a,b]
+$$
+
+확률밀도함수는 다음과 같다.
+
+$$
+\begin{aligned}
+f_X(x) &= \begin{cases} \frac{1}{b-a} & \text{for x} \in [a,b] \\[10pt]
+0 & \text{otherwise} \end{cases}\\[10pt] 
+&= \frac{1}{b-a} I_{\{a \le x \le b\}}(x)
+\end{aligned}
+$$
+
+평균과 분산을 구하면 다음과 같다. 
+
+$$
+\begin{aligned}
+\mathbb{E}(X) &= \int_{-\infty}^{\infty} x f(x) dx \\
+&= \int_{-\infty}^{\infty} x \frac{1}{b-a} I_{\{a \le x \le b\}}(x) dx\\
+&= \int_{a}^{b} x \frac{1}{b-a} dx\\
+&= \frac{b-a}{2} \\[10pt]
+Var(X) &= \mathbb{E}(X^2) - \mathbb{E}(X)^2 \\
+&= \int_{-\infty}^{\infty} x^2 f(x) dx - (\frac{b-a}{2})^2 \\
+&= \frac{(b-a)^2}{12}\\
+\end{aligned}
+$$
+
+
+## Exponential Distribution
+
+지수분포의 확률밀도함수를 구하기 위해 고학번 학생의 **‘갠톡’** 예제로 돌아가 보자. 이제 이 학생이 지금 이 순간으로부터 **최초의 ‘갠톡’**을 받을 때까지 대기 시간을 구해보자. 
+
+포아송분포에서, 단위시간당 평균적으로 $\lambda$ 만큼의 사건이 발생한다고 했다. 그러면 t시간이 흘렀을 때 발생한 사건의 수 $X$는 $\text{Pois}(t\lambda)$의 분포를 따를 것이다. 그러면 이 분포에서 $x=0$일 때의 PDF, 즉 t시간이 흘렀을 때도 사건이 한 번도 발생하지 않을 확률을 구할 수 있다. 
+
+$$
+\begin{aligned}
+X &\sim \text{Pois}(t\lambda) \\[10pt]
+g_X(0) &= \frac{(t\lambda) ^0 exp(- t\lambda)}{0!}\\
+&= exp(- t\lambda)\\[10pt] 
+\end{aligned}
+$$
+
+하지만 이 학생이 궁금한 건 t시간이 흘렀을 때 사건이 최초로 발생했을 확률, 즉 위 확률의 여사건이다. 보다 정확하게는, t시점에서 ‘갠톡’이 발생할 확률밀도를 구하려고 하므로 위 확률의 여사건을 t로 미분해주어야 한다. 따라서 지수분포의 확률밀도함수는 다음과 같이 된다. 여전히 속도 파라미터 $\lambda$를 쓰며, 이 파라미터의 의미는 포아송분포에서와 같다.
+
+
+$$
+\begin{aligned}
+P(x \le t) &= 1-exp(- t\lambda)\\
+f(t) &= \frac{d}{dt} (1-exp(- t\lambda))\\
+&= \lambda exp(- t\lambda)\\[10pt] 
+f_X(x) &= \lambda exp(- x\lambda) I_{\{x\ge0\}}(x)\\
+\end{aligned}
+$$
+
+
+다음은 파라미터에 따른 분포의 모양들이다. 모양에 근거하여, 분포의 패턴이 **기하분포**와 유사함을 알 수 있다. 
+
+```{r, echo=FALSE}
+exp1 = function(x){dexp(x, rate=1)}
+exp2 = function(x){dexp(x, rate=2)}
+exp5 = function(x){dexp(x, rate=5)}
+exp10 = function(x){dexp(x, rate=10)}
+
+ggplot(NULL, aes(x=x, colour = lambdas)) +
+  stat_function(data = data.frame(x = 0:2, lambdas = factor(1)), fun = exp1, size=.8) +
+  stat_function(data = data.frame(x = 0:2, lambdas = factor(2)), fun = exp2, size=.8) +
+  stat_function(data = data.frame(x = 0:2, lambdas = factor(3)), fun = exp5, size=.8) +
+  stat_function(data = data.frame(x = 0:2, lambdas = factor(4)), fun = exp10, size=.8) +
+  scale_colour_manual(values = c("red", "green", "yellow", "blue"), 
+                      labels = c("lambda=1", "lambda=2", "lambda=5", "lambda=10")) +
+  labs(y="probability density") +
+  theme_classic()
+```
+
+
+쉽게 생각하면, 평균적으로 하루 두 번을 받으므로 대기 시간이 0.5일(12시간) 부근에서 가장 확률이 높을 것 같다. 하지만 위 그래프를 보면 그렇지 않은 것을 쉽게 알 수 있으며, 확률밀도는 x가 증가할수록 감소하는 것을 볼 수 있다. 초록색 그래프를 보고 생각해보자. $0 \le x \le 1$일 때의 곡선 아래 면적, 즉 오늘 하루 안에 ‘갠톡’이 도착할 확률은 $1 \le x \le 2$일 때의 곡선 아래 면적, 즉 내일 중에 ‘갠특’이 도착할 확률보다 더 높다. 지수분포가 ‘최초 발생 시까지의 대기시간’과 관련됨을 상기하면, 전자의 경우 ‘내일 중 도착할 확률’과는 무관한 반면 후자의 경우 ‘오늘 안에 도착’해서는 안 된다는 조건이 있기 때문이다. 따라서 지수분포는 ‘발생할 확률’이 점차 줄어드는 게 아니라, ‘발생하지 않을 확률’이 점차 줄어드는 것으로 직관적으로 해석하는 것이 더 이해가 쉬울 것으로 보인다.
+
+
+평균과 분산을 구하면 다음과 같다. 
+
+$$
+\begin{aligned}
+\mathbb{E}(X) &= \int_{-\infty}^{\infty} x f(x) dx \\
+&= \int_{-\infty}^{\infty} x \lambda exp(- x\lambda) I_{\{x\ge0\}}(x) dx\\
+&= \lambda \int_{0}^{\infty}x  exp(- x\lambda) dx\\
+&= \lambda [x \frac{exp(-\lambda x)}{-\lambda} \Big|^{\infty}_{0} - \int_{0}^{\infty}\frac{exp(-\lambda x)}{-\lambda} dx]\\
+&= -x exp(-\lambda x) \Big|^{\infty}_{0}+ \int_{0}^{\infty}exp(-\lambda x) dx\\
+&= [-x exp(-\lambda x) - \frac{exp(-\lambda x)}{\lambda}] ^{\infty}_{0}\\
+&= \frac{1}{\lambda} \\[10pt]
+Var(X) &= \frac{1}{\lambda^2}\\
+\end{aligned}
+$$
+
+
+
+## Normal Distribution
+
+표준정규분포, 즉 평균이 0이고 분산이 1인 분포의 확률밀도함수는 다음과 같다.
+
+$$
+\begin{aligned}
+Z &\sim N(0,1) \\
+f(z) &= \frac{1}{\sqrt{2\pi}} exp(-\frac{z^2}{2})
+\end{aligned}
+$$
+
+정규분포는 파라미터는 평균과 분산 그 자체다. 평균이 $\mu$, 분산이 $\sigma^2$인 무선변수, 즉 $X=\sigma Z + \mu$의 PDF는 다음과 같다.
+
+
+$$
+\begin{aligned}
+X &\sim N(\mu,\sigma^2) \\
+f(x) &= \frac{1}{\sqrt{2\pi \sigma^2}} exp(-\frac{(x-\mu)^2}{2\sigma^2})
+\end{aligned}
+$$
+
+
+## Gamma Distribution
+
+$(\frac{1}{2})!$은 얼마일까? 놀랍게도, $\frac{\sqrt{\pi}}{2}$이다. 이러한 Factorial 값은 감마함수를 통해 구할 있다. 감마함수 $\Gamma(\cdot)$ (**Gamma Function**)는 Factorial을 양의 실수로 확장한 것이다.
+ 
+감마분포는 이러한 감마함수를 이용한 분포로, 포아송분포와 지수분포의 파라미터에 대한 **켤레사전분포(conjugate prior distribution)**이므로 앞으로 자주 다루게 될 것이다.
+
+파라미터가 $\lambda$인 Exponential distribution 따르는 독립적인 무선변수 X $n$개의 합은 $\text{Gamma}(n, \beta)$를 따른다.
+
+감마분포의 확률밀도함수는 다음과 같다.
+
+$$
+\begin{aligned}
+Y & \sim Gamma(\alpha, \beta) \\ 
+f(y \mid \alpha, \beta) & = \frac{\beta ^ \alpha}{\Gamma(\alpha)}y^{\alpha-1}exp^{-\beta y}I_{\{y\ge0\}}(y)
+\end{aligned}
+$$
+
+감마분포의 기댓값과 분산을 구해보자.
+
+$$
+\begin{aligned}
+Y & \sim Gamma(\alpha, \beta) \\ 
+\mathbb{E}(Y) & = \frac{\alpha}{\beta} \\
+Var(Y) & = \frac{\alpha}{\beta^2} \\
+\end{aligned}
+$$
+
+
+다음은 파라미터에 따른 확률밀도함수들이다. $\alpha$가 $\beta$에 비해 충분히 크면, 정규분포에 근사하는 것을 관찰할 수 있다.
+
+```{r, echo=FALSE}
+
+gamma12 = function(x){dgamma(x, shape=1,rate=2)}
+gamma22 = function(x){dgamma(x, shape=2,rate=2)}
+gamma52 = function(x){dgamma(x, shape=5,rate=2)}
+gamma25 = function(x){dgamma(x, shape=2,rate=5)}
+
+ggplot(NULL, aes(x=x, colour = alpha_beta)) +
+  stat_function(data = data.frame(x = 0:5, alpha_beta = factor(1)), fun = gamma12, size=.8) +
+  stat_function(data = data.frame(x = 0:5, alpha_beta = factor(2)), fun = gamma22, size=.8) +
+  stat_function(data = data.frame(x = 0:5, alpha_beta = factor(3)), fun = gamma52, size=.8) +
+  stat_function(data = data.frame(x = 0:5, alpha_beta = factor(4)), fun = gamma25, size=.8) +
+  scale_colour_manual(values = c("red", "green", "yellow", "blue"), 
+                      labels = c("alpha=1, beta=2", "alpha=2, beta=2",
+                                 "alpha=5, beta=2", "alpha=2, beta=5")) +
+  labs(y="probability density") +
+  theme_classic()
+```
+
+
+## Beta Distribution
+
+베타분포의 확률밀도함수는 다음과 같다. 베타분포는 베르누이분포, 이항분포, 기하분포의 파라미터에 대한 켤레사전확률분포로, 앞으로 자주 다루게 될 것이다. 만일 $X_1 \sim \text{Gamma}(\alpha_1, 1)$, $X_2 \sim \text{Gamma}(\alpha_2, 1)$이면 $\frac{X_1}{X_1+X_2} \sim \text{Beta}(\alpha_1, \alpha_2)$이다. 
+
+
+$$
+\begin{aligned}
+X & \sim Beta(\alpha, \beta) \\ 
+f(x \mid \alpha, \beta) & = \frac{\Gamma({\alpha+\beta})}{\Gamma(\alpha)\Gamma(\beta)}x^{\alpha-1}(1-x)^{\beta -1}I_{\{0\le x\le 1\}}(x)
+\end{aligned}
+$$
+
+베타분포의 기댓값과 분산은 다음과 같다.
+
+$$
+\begin{aligned}
+\mathbb{E}(X) &= \frac{\alpha}{\alpha + \beta} \\ 
+Var(X) & = \frac{\alpha \beta}{(\alpha+\beta)^2 (\alpha+\beta+1)} \\
+\end{aligned}
+$$
+
+다음은 파라미터에 따른 확률밀도함수들이다. 다른 분포에 비해 파라미터에 따라 분포의 모양의 가변성이 높다. $\alpha$와 $\beta$가 같고 충분히 크면 정규분포에 근사한다.
+
+```{r, echo=FALSE}
+beta.5.5 = function(x){dbeta(x, shape1=.5,shape2=.5)}
+beta22 = function(x){dbeta(x, shape1=2,shape2=2)}
+beta25 = function(x){dbeta(x, shape1=2,shape2=5)}
+beta15 = function(x){dbeta(x, shape1=1,shape2=5)}
+
+ggplot(NULL, aes(x=x, colour = alpha_beta)) +
+  stat_function(data = data.frame(x = 0:1, alpha_beta = factor(1)), fun = beta.5.5, size=.8) +
+  stat_function(data = data.frame(x = 0:1, alpha_beta = factor(2)), fun = beta22, size=.8) +
+  stat_function(data = data.frame(x = 0:1, alpha_beta = factor(3)), fun = beta25, size=.8) +
+  stat_function(data = data.frame(x = 0:1, alpha_beta = factor(4)), fun = beta15, size=.8) +
+  scale_colour_manual(values = c("red", "green", "yellow", "blue"), 
+                      labels = c("alpha=1/2, beta=1/2", "alpha=2, beta=2",
+                                 "alpha=2, beta=5", "alpha=1, beta=5")) +
+  labs(y="probability density") +
+  theme_classic()
+```
+
+
+## t Distribution
+
+$\bar{X}$는 **중심극한정리**에 의해 $N(\mu, \sigma^2 /n)$을 따른다. 따라서 $\frac{\bar{X} - \mu}{\sigma / \sqrt{n}} \sim N(0,1)$이다. $N(0,1)$은 우리가 잘 아는 분포이기 때문에, 이렇게 변환하면 표본에 대한 분석이 매우 용이해진다.
+
+하지만 모표준편차 $\sigma$를 알지 못할 경우가 대부분이므로, 이를 표본으로부터 추정해야 한다. 모표준편차 자리에 표본표준편차, 즉 $S=\sqrt{\sum_i(X_i - \bar{X})^2/(n-1)}$를 넣으면, 즉 $\frac{\bar{X} - \mu}{S / \sqrt{n}}$를 구하면 이 통계량은 당연하게도 더 이상 정규분포를 따르지 않는다. 대신에, $X$가 **정규분포를 따른다고 가정할 경우** 자유도가 $\nu = n-1$인 t분포를 따른다.
+
+t분포의 확률밀도함수는 다음과 같다.
+
+
+$$
+\begin{aligned}
+Y & \sim t(\nu) \\ 
+f(y ) & = \frac{\Gamma(\frac{\nu+1}{2})}{\Gamma(\frac{\nu}{2})\sqrt{\nu\pi}}(1+\frac{y^2}{\nu})^{-(\frac{\nu+1}{2})}
+\end{aligned}
+$$
+
+평균과 분산은 다음과 같다. 자유도($\nu$)가 해당 범위에 있지 않으면 평균이나 분산이 정의되지 않음에 유의하자.
+
+$$
+\begin{aligned}
+Y & \sim t(\nu) \\[10pt]
+\mathbb{E}(Y) &= 0 \text{ if } \nu >1 \\
+Var(Y) &= \frac{\nu}{\nu-2} \text{ if } \nu >2 \\
+\end{aligned}
+$$
+
+다음은 파라미터에 따른 확률밀도함수들이다. 정규분포에 비해 thick tail을 가지지만, 자유도가 높아질수록 정규분포에 근사함을 알 수 있다.
+
+```{r, echo=FALSE}
+t1 = function(x){dt(x, df=1)}
+t10 = function(x){dt(x, df=10)}
+t1e5 = function(x){dt(x, df=1e5)}
+norm1 = function(x){dnorm(x)}
+
+ggplot(NULL, aes(x=x, colour = Deg_of_Freedom)) +
+  stat_function(data = data.frame(x = -3:3, Deg_of_Freedom = factor(1)), fun = t1, size=.8) +
+  stat_function(data = data.frame(x = -3:3, Deg_of_Freedom = factor(2)), fun = t10, size=.8) +
+  stat_function(data = data.frame(x = -3:3, Deg_of_Freedom = factor(3)), fun = t1e5, size=.8) +
+  stat_function(data = data.frame(x = -3:3, Deg_of_Freedom = factor(4)), fun = norm1, size=.8) +
+  scale_colour_manual(values = c("red", "green", "yellow", "blue"), 
+                      labels = c("df=1", "df=10", "df=Inf", "normal")) +
+  labs(y="probability density") +
+  theme_classic()
+```
+
+
+
+# Central Limit Theorem
+
+Levy, Kolmogorov 등에 의해 증명된 중요한 정리로, $n$이 충분히 큰 경우, **표본평균**, 즉 $\bar{X}$의 분포가 정규분포로 분포수렴한다는 정리이다. 
+
+$$
+\begin{aligned}
+\lim_{n \rightarrow \infty}\frac{\sqrt{n}(\bar{X}-\mu)}{\sigma} &= \Phi(x) \text{ where } \Phi \text{ : standard normal PDF} \\
+&X_i : iid, \mathbb{E}(X)=\mu, Var(X)=\sigma^2 \\
+\end{aligned}
+$$
+
+
+# Bayes Theorem for Continuous Distributions
+
+연속확률변수에 대하여, $y$가 주어졌을 때 **무선변수** $\theta$에 대한 조건부 density를 다음과 같이 쓸 수 있다. 
+
+$$
+f(\theta \mid y) = \frac{f(y \mid \theta) f(\theta)}{\int f(y | \theta) f(\theta) d\theta}
+$$
+
+\pagebreak
+
+
+# Quiz
+
+
+## 3.1.4. What is the value of $f(x) = -5I{\{x > 2\}}(x) + xI{\{x < -1\}}(x)$ when $x=3$?
+
+$f(x) = -5 \cdot 1 + 3 \cdot 0 = -5$
+
+
+## 3.1.6. Which of the following scenarios could we appropriately model using a Bernoulli random variable?
+
++ Predicting the number of goals scored in a hockey match : **Poisson(discrete)**
+
++ Predicting whether your hockey team wins its next game : **Bernoulli(discrete)**
+
++ Predicting the weight of a typical hockey player : **Normal(continuous)**
+
++ Predicting the number of wins in a series of three games against a single opponent : **Binomial(discrete)**
+
+
+## 3.1.7. Calculate the E.V. of $X$. $X$ takes on values $\{0,1,2,3\}$ with corr. probability $\{0.5,0.2,0.2,0.1\}$. Round your answer to one decimal place.
+
+```{r}
+sum(c(0, 1, 2, 3) * c(.5, .2, .2, .1))
+```
+
+## 3.1.9. $X \sim \text{Binomial}(3, 0.2)$. Calculate $P(X \le 2)$.
+
+```{r}
+1 - 1 * 0.2^3 ## Analytic
+
+X = rbinom(1e5, size=3, prob=.2)
+sum(X <= 2) / length(X) ## Monte Carlo
+```
+
+
+## 3.2.2. if $X \sim \text{Uniform}(0, 1)$, then what is the value of $P(-3 < X < -0.2)$?
+
+$f_X(x)=\frac{1}{b-a}I_{\{0 \le x \le 1\}}(x)$
+$P(-3 < X < 0.2)=\int_{-3}^{0.2}\frac{1}{b-a}I_{\{0 \le x \le 1\}}(x)$
+
+$$
+\begin{aligned}
+P(-3 < X < 0.2) &= \int_{-3}^{0.2} f(x) dx\\
+& =\int_{-3}^{0.2}\frac{1}{b-a}I_{\{0 \le x \le 1\}}(x)dx \\
+& = \int_{0}^{0.2}dx\\
+& = 0.2 \\
+\end{aligned}
+$$
+
+
+## 3.2.4. Which of the following scenarios could we appropriately model using a exponentially distributed random variable?
+
++ The probability of a light bulb failure before 100 hours in service : **Probability**
+
++ The lifetime in hours of particular lightbulb : **Exponential(continuous)**
+
++ The number of failed lightbulbs in a batch of 5000 after 100 hours in service : **Poisson(discrete)**
+
++ The hours of service until all light bulbs in a batch of 5000 fail: **Normal(continuous)**
