@@ -2,7 +2,7 @@
 
 This poject is for archiving the personal contributions to the study group **'PsyBayes 2017'**.
 
-The group followed **coursera** course
+The group followed **coursera** courses
 
 + Bayesian Statistics: From Concept to Data Analysis
 
